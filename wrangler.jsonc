@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shopbeapicks",
+  "compatibility_date": "2026-08-04",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "./dist",
+  "vars": {
+    "NUXT_ADMIN_DEV_BYPASS": "false",
+    "NUXT_ACCESS_ALLOWED_EMAILS": "alexa6425@gmail.com,shopbeapicks@gmail.com",
+    "NUXT_PUBLIC_ACCESS_TEAM_DOMAIN": "polished-queen-9697.cloudflareaccess.com",
+    "NUXT_PUBLIC_SITE_URL": "https://shopbeapicks.pages.dev"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shopbeapicks",
+      "database_id": "e1ff9bb7-0c5f-409f-b8e1-b7860106a77a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "shopbeapicks-images"
+    }
+  ]
+}

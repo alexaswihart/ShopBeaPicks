@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          NUXT_ADMIN_DEV_BYPASS: 'false'
+          NUXT_ACCESS_ALLOWED_EMAILS: alexa6425@gmail.com,shopbeapicks@gmail.com
+          NUXT_PUBLIC_ACCESS_TEAM_DOMAIN: polished-queen-9697.cloudflareaccess.com
+          NUXT_PUBLIC_SITE_URL: https://shopbeapicks.pages.dev
