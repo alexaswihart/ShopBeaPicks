@@ -1,14 +1,13 @@
 <script setup lang="ts">
-const colorMode = useColorMode()
-
-const src = computed(() =>
-  colorMode.value === 'dark' ? '/brand/logo-dark.png' : '/brand/logo-light.png'
-)
+/**
+ * Header is brand navy in both color modes, so always use the
+ * light-on-dark mark.
+ */
 </script>
 
 <template>
   <img
-    :src="src"
+    src="/brand/logo-dark.png"
     alt="Shop Bea Picks"
     class="h-16 sm:h-20 md:h-24 w-auto object-contain"
     width="256"

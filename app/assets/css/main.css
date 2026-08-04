@@ -63,22 +63,23 @@
 
 .dark {
   --ui-header-height: 6.5rem;
-  --ui-bg: #213574;
-  --ui-bg-muted: #1B2C61;
-  --ui-bg-elevated: #15234E;
-  --ui-bg-accented: #334887;
+  /* A few shades lighter than brand navy #213574 */
+  --ui-bg: #334887;
+  --ui-bg-muted: #2A3F78;
+  --ui-bg-elevated: #213574;
+  --ui-bg-accented: #4F64A0;
   --ui-bg-inverted: #F8CFE1;
 
-  --ui-text-dimmed: #7A8CBE;
-  --ui-text-muted: #ABB7D9;
-  --ui-text-toned: #D5DBEC;
+  --ui-text-dimmed: #ABB7D9;
+  --ui-text-muted: #D5DBEC;
+  --ui-text-toned: #EEF1F8;
   --ui-text: #F4F9FF;
   --ui-text-highlighted: #F4F9FF;
   --ui-text-inverted: #213574;
 
-  --ui-border: #334887;
-  --ui-border-muted: #1B2C61;
-  --ui-border-accented: #4F64A0;
+  --ui-border: #4F64A0;
+  --ui-border-muted: #2A3F78;
+  --ui-border-accented: #7A8CBE;
   --ui-border-inverted: #F8CFE1;
 
   --ui-primary: #F8CFE1;

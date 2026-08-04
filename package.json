@@ -6,7 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
-    "deploy": "npm run db:migrate:remote && nuxt build && wrangler pages deploy dist",
+    "deploy": "npm run db:migrate:remote && nuxt build && wrangler pages deploy dist --project-name=shopbeapicks --branch=production --commit-dirty=true",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
     "cf-typegen": "wrangler types",

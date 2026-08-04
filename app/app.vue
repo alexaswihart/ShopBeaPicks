@@ -52,7 +52,13 @@ const logoutUrl = computed(() => {
       title="ShopBeaPicks"
       mode="slideover"
       :ui="{
-        content: 'w-3/4 max-w-[75%]'
+        root: 'bg-[#213574] border-[#1B2C61]',
+        left: 'text-[#F8CFE1]',
+        center: 'text-[#F8CFE1]',
+        right: 'text-[#F8CFE1]',
+        toggle: 'text-[#F8CFE1] hover:bg-[#F8CFE1]/15',
+        content: 'w-3/4 max-w-[75%]',
+        header: 'bg-[#213574] border-[#1B2C61] text-[#F8CFE1]'
       }"
     >
       <template #left>
@@ -61,7 +67,12 @@ const logoutUrl = computed(() => {
         </NuxtLink>
       </template>
 
-      <UNavigationMenu :items="navItems" />
+      <UNavigationMenu
+        :items="navItems"
+        :ui="{
+          link: 'text-[#F8CFE1] hover:text-[#FCEEF4] data-[active]:text-[#FCEEF4] before:bg-[#F8CFE1]/15'
+        }"
+      />
 
       <template #body>
         <UNavigationMenu
@@ -75,14 +86,24 @@ const logoutUrl = computed(() => {
       </template>
 
       <template #right>
-        <UColorModeButton />
+        <UColorModeButton class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15" />
 
         <UButton
           v-if="onAdminRoute"
           to="/"
           color="neutral"
           variant="ghost"
-          label="View site"
+          label="User View"
+          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
+        />
+
+        <UButton
+          v-else
+          to="/admin"
+          color="neutral"
+          variant="ghost"
+          label="Admin View"
+          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
         />
 
         <UButton
@@ -92,14 +113,7 @@ const logoutUrl = computed(() => {
           variant="ghost"
           label="Logout"
           external
-        />
-
-        <UButton
-          v-else
-          to="/admin"
-          color="neutral"
-          variant="ghost"
-          label="Login"
+          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
         />
       </template>
     </UHeader>
