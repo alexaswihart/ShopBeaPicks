@@ -17,18 +17,31 @@
   --color-navy-900: #101A3B;
   --color-navy-950: #0A1026;
 
-  /* Secondary #F8CFE1 */
-  --color-blush-50: #FEF7FA;
-  --color-blush-100: #FCEEF4;
-  --color-blush-200: #F8CFE1;
-  --color-blush-300: #F3A8C8;
-  --color-blush-400: #EB7AAB;
-  --color-blush-500: #DE4F8E;
-  --color-blush-600: #C23072;
-  --color-blush-700: #A1235C;
-  --color-blush-800: #861F4D;
-  --color-blush-900: #711D43;
-  --color-blush-950: #440B25;
+  /* Secondary #F189AC */
+  --color-blush-50: #FEF6F8;
+  --color-blush-100: #FCE7EE;
+  --color-blush-200: #F9D0DE;
+  --color-blush-300: #F6B2C9;
+  --color-blush-400: #F39BB8;
+  --color-blush-500: #F189AC;
+  --color-blush-600: #D47997;
+  --color-blush-700: #AE637C;
+  --color-blush-800: #8C4F64;
+  --color-blush-900: #6C3E4D;
+  --color-blush-950: #432630;
+
+  /* Tertiary #5086C4 */
+  --color-sky-50: #F1F5FA;
+  --color-sky-100: #DCE7F3;
+  --color-sky-200: #B9CFE7;
+  --color-sky-300: #8DB0D9;
+  --color-sky-400: #6595CB;
+  --color-sky-500: #5086C4;
+  --color-sky-600: #4676AC;
+  --color-sky-700: #3A608D;
+  --color-sky-800: #2E4E72;
+  --color-sky-900: #243C58;
+  --color-sky-950: #162637;
 }
 
 /*
@@ -40,9 +53,9 @@
 .light {
   --ui-header-height: 6.5rem;
   --ui-bg: #F4F9FF;
-  --ui-bg-muted: #F8CFE1;
-  --ui-bg-elevated: #FCEEF4;
-  --ui-bg-accented: #F8CFE1;
+  --ui-bg-muted: #F9D0DE;
+  --ui-bg-elevated: #FCE7EE;
+  --ui-bg-accented: #F9D0DE;
   --ui-bg-inverted: #213574;
 
   --ui-text-dimmed: #7A8CBE;
@@ -58,7 +71,7 @@
   --ui-border-inverted: #213574;
 
   --ui-primary: #213574;
-  --ui-secondary: #F8CFE1;
+  --ui-secondary: #F189AC;
 }
 
 .dark {
@@ -68,7 +81,7 @@
   --ui-bg-muted: #2A3F78;
   --ui-bg-elevated: #213574;
   --ui-bg-accented: #4F64A0;
-  --ui-bg-inverted: #F8CFE1;
+  --ui-bg-inverted: #F189AC;
 
   --ui-text-dimmed: #ABB7D9;
   --ui-text-muted: #D5DBEC;
@@ -80,10 +93,10 @@
   --ui-border: #4F64A0;
   --ui-border-muted: #2A3F78;
   --ui-border-accented: #7A8CBE;
-  --ui-border-inverted: #F8CFE1;
+  --ui-border-inverted: #F189AC;
 
-  --ui-primary: #F8CFE1;
-  --ui-secondary: #F8CFE1;
+  --ui-primary: #F189AC;
+  --ui-secondary: #F189AC;
 }
 
 html,

@@ -35,8 +35,8 @@ jobs:
         env:
           NUXT_ADMIN_DEV_BYPASS: 'false'
           NUXT_ACCESS_ALLOWED_EMAILS: alexa6425@gmail.com,shopbeapicks@gmail.com
-          NUXT_PUBLIC_ACCESS_TEAM_DOMAIN: polished-queen-9697.cloudflareaccess.com
-          NUXT_PUBLIC_SITE_URL: https://shopbeapicks.pages.dev
+          NUXT_PUBLIC_ACCESS_TEAM_DOMAIN: flat-wave-3363.cloudflareaccess.com
+          NUXT_PUBLIC_SITE_URL: https://shopbeapicks-42i.pages.dev
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name=shopbeapicks --branch=production --commit-dirty=true

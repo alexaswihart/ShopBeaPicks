@@ -26,3 +26,6 @@ logs
 
 # Wrangler
 .wrangler
+
+# Account migration exports (local only)
+migration

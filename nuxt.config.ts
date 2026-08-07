@@ -6,6 +6,20 @@ export default defineNuxtConfig({
     'nitro-cloudflare-dev'
   ],
 
+  ui: {
+    theme: {
+      colors: [
+        'primary',
+        'secondary',
+        'tertiary',
+        'info',
+        'success',
+        'warning',
+        'error'
+      ]
+    }
+  },
+
   devtools: {
     enabled: true
   },

@@ -198,7 +198,7 @@ async function saveEdit() {
           description="As an Amazon Associate I earn from qualifying purchases."
           class="mb-8"
           :ui="{
-            root: 'text-primary!'
+            root: 'text-secondary!'
           }"
         />
 

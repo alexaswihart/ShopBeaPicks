@@ -73,13 +73,13 @@ function formatDate(value: string | null) {
                 <p v-if="post.published_at" class="text-xs text-muted mb-1">
                   {{ formatDate(post.published_at) }}
                 </p>
-                <h2 class="text-xl font-semibold text-highlighted group-hover:text-primary transition-colors">
+                <h2 class="text-xl font-semibold text-highlighted group-hover:text-secondary transition-colors">
                   {{ post.title }}
                 </h2>
                 <p class="mt-2 text-muted line-clamp-3">
                   {{ post.excerpt || 'Read the full post →' }}
                 </p>
-                <span class="mt-3 inline-flex items-center gap-1 text-sm text-primary font-medium">
+                <span class="mt-3 inline-flex items-center gap-1 text-sm text-tertiary font-medium">
                   Read more
                   <UIcon name="i-lucide-arrow-right" class="size-4" />
                 </span>

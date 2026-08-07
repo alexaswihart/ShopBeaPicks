@@ -6,7 +6,7 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', href: '/brand/logo-light.png', type: 'image/png' }
+    { rel: 'icon', href: '/brand/favicon.png', type: 'image/png' }
   ],
   htmlAttrs: {
     lang: 'en'
@@ -53,12 +53,12 @@ const logoutUrl = computed(() => {
       mode="slideover"
       :ui="{
         root: 'bg-[#213574] border-[#1B2C61]',
-        left: 'text-[#F8CFE1]',
-        center: 'text-[#F8CFE1]',
-        right: 'text-[#F8CFE1]',
-        toggle: 'text-[#F8CFE1] hover:bg-[#F8CFE1]/15',
+        left: 'text-[#F189AC]',
+        center: 'text-[#F189AC]',
+        right: 'text-[#F189AC]',
+        toggle: 'text-[#F189AC] hover:bg-[#F189AC]/15',
         content: 'w-3/4 max-w-[75%]',
-        header: 'bg-[#213574] border-[#1B2C61] text-[#F8CFE1]'
+        header: 'bg-[#213574] border-[#1B2C61] text-[#F189AC]'
       }"
     >
       <template #left>
@@ -70,7 +70,7 @@ const logoutUrl = computed(() => {
       <UNavigationMenu
         :items="navItems"
         :ui="{
-          link: 'text-[#F8CFE1] hover:text-[#FCEEF4] data-[active]:text-[#FCEEF4] before:bg-[#F8CFE1]/15'
+          link: 'text-[#F189AC] hover:text-[#FCE7EE] data-[active]:text-[#FCE7EE] before:bg-[#F189AC]/15'
         }"
       />
 
@@ -86,7 +86,7 @@ const logoutUrl = computed(() => {
       </template>
 
       <template #right>
-        <UColorModeButton class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15" />
+        <UColorModeButton class="text-[#F189AC] hover:bg-[#F189AC]/15" />
 
         <UButton
           v-if="onAdminRoute"
@@ -94,7 +94,7 @@ const logoutUrl = computed(() => {
           color="neutral"
           variant="ghost"
           label="User View"
-          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
+          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
         />
 
         <UButton
@@ -102,8 +102,8 @@ const logoutUrl = computed(() => {
           to="/admin"
           color="neutral"
           variant="ghost"
-          label="Admin View"
-          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
+          :label="isLoggedIn ? 'Admin View' : 'Login'"
+          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
         />
 
         <UButton
@@ -113,7 +113,7 @@ const logoutUrl = computed(() => {
           variant="ghost"
           label="Logout"
           external
-          class="text-[#F8CFE1] hover:bg-[#F8CFE1]/15 hover:text-[#FCEEF4]"
+          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
         />
       </template>
     </UHeader>
