@@ -26,7 +26,7 @@ useSeoMeta({
 
 const route = useRoute()
 const onAdminRoute = computed(() => route.path.startsWith('/admin'))
-const { isLoggedIn } = useAdminSession()
+const { isLoggedIn, isAdminView, enterAdminView, enterUserView } = useAdminSession()
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -35,15 +35,12 @@ const navItems = [
   { label: 'Contact', to: '/contact' }
 ]
 
-/**
- * Log out of the Access application cookie on the site domain.
- * Team-domain logout (/cdn-cgi/access/logout on *.cloudflareaccess.com)
- * often shows "Failed to log out" and is unnecessary for clearing /admin access.
- */
-const logoutUrl = computed(() => {
-  const site = String(config.public.siteUrl || 'https://shopbeapicks.pages.dev').replace(/\/$/, '')
-  return `${site}/cdn-cgi/access/logout?returnTo=${encodeURIComponent(`${site}/`)}`
-})
+function goUserView() {
+  enterUserView()
+  if (onAdminRoute.value) {
+    return navigateTo('/')
+  }
+}
 </script>
 
 <template>
@@ -89,26 +86,35 @@ const logoutUrl = computed(() => {
         <UColorModeButton class="text-[#F189AC] hover:bg-[#F189AC]/15" />
 
         <UButton
-          v-if="onAdminRoute"
-          to="/"
+          v-if="!isLoggedIn"
+          to="/admin"
+          color="neutral"
+          variant="ghost"
+          label="Login"
+          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
+        />
+
+        <UButton
+          v-else-if="onAdminRoute || isAdminView"
           color="neutral"
           variant="ghost"
           label="User View"
           class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
+          @click="goUserView"
         />
 
         <UButton
           v-else
-          to="/admin"
           color="neutral"
           variant="ghost"
-          :label="isLoggedIn ? 'Admin View' : 'Login'"
+          label="Admin View"
           class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
+          @click="enterAdminView"
         />
 
         <UButton
           v-if="isLoggedIn"
-          :to="logoutUrl"
+          to="/admin/logout"
           color="neutral"
           variant="ghost"
           label="Logout"

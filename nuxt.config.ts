@@ -35,7 +35,7 @@ export default defineNuxtConfig({
     accessAud: process.env.NUXT_CF_ACCESS_AUD || '',
     public: {
       accessTeamDomain: process.env.NUXT_PUBLIC_ACCESS_TEAM_DOMAIN || '',
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://shopbeapicks.pages.dev',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://shopbeapicks.com',
       siteName: 'ShopBeaPicks'
     }
   },

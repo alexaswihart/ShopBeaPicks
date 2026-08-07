@@ -35,4 +35,4 @@ jobs:
           NUXT_ADMIN_DEV_BYPASS: 'false'
           NUXT_ACCESS_ALLOWED_EMAILS: alexa6425@gmail.com,shopbeapicks@gmail.com
           NUXT_PUBLIC_ACCESS_TEAM_DOMAIN: polished-queen-9697.cloudflareaccess.com
-          NUXT_PUBLIC_SITE_URL: https://shopbeapicks.pages.dev
+          NUXT_PUBLIC_SITE_URL: https://shopbeapicks.com

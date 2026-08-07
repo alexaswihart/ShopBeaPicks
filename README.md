@@ -64,7 +64,7 @@ Repo → **Settings → Secrets and variables → Actions** → add:
 | `CLOUDFLARE_API_TOKEN` | token from step 2 |
 | `CLOUDFLARE_ACCOUNT_ID` | `28cc8a039635008353c70b138ee54b1b` |
 
-After that, every push to `main` migrates D1, builds, and deploys to the **shopbeapicks** Pages project (`https://shopbeapicks-42i.pages.dev`).
+After that, every push to `main` migrates D1, builds, and deploys to the **shopbeapicks** Pages project (`https://shopbeapicks.pages.dev`).
 
 You can still deploy locally with `npm run deploy` when needed.
 
@@ -98,7 +98,7 @@ Keep the binding name `IMAGES` (already configured).
 
 If you deploy via the dashboard Git integration (not only `wrangler pages deploy`), also add the same D1 + R2 bindings under **Workers & Pages → your project → Settings → Bindings**.
 
-## Cloudflare Access login (shopbeapicks-42i.pages.dev)
+## Cloudflare Access login (shopbeapicks.pages.dev)
 
 Public site stays open. Only `/admin*` requires Access login (not `/api/*`).
 
@@ -124,17 +124,17 @@ Protect **only** this public hostname destination:
 
 | Field | Value |
 | --- | --- |
-| Domain | `shopbeapicks-42i.pages.dev` |
+| Domain | `shopbeapicks.pages.dev` |
 | Path | `/admin` |
 
 If the UI allows wildcards or “path starts with”, use `/admin` so `/admin` and `/admin/posts/...` are covered. Some UIs need two destinations:
 
-- `shopbeapicks-42i.pages.dev/admin`
-- `shopbeapicks-42i.pages.dev/admin/*`
+- `shopbeapicks.pages.dev/admin`
+- `shopbeapicks.pages.dev/admin/*`
 
 Do **not** add `/api/admin`. Do **not** put `https://` in the domain field.
 
-If you deleted destinations and see “Unable to find your Access application”, recreate the self-hosted app with the destination above, keep your Allow email policy, then try https://shopbeapicks-42i.pages.dev/admin again (full browser navigation, not a fetch).
+If you deleted destinations and see “Unable to find your Access application”, recreate the self-hosted app with the destination above, keep your Allow email policy, then try https://shopbeapicks.pages.dev/admin again (full browser navigation, not a fetch).
 **Policy:** Allow when email is an owner (or Cloudflare account member if using Cloudflare IdP). Enable your IdP; Instant Auth is fine with a single IdP.
 
 ### 4. Pages env vars + redeploy

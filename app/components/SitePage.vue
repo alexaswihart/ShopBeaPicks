@@ -16,7 +16,7 @@ const { data, status, error, refresh } = await useFetch<{ page: SitePageModel }>
 )
 
 const page = computed(() => data.value?.page)
-const { isLoggedIn: isAdmin } = useAdminSession()
+const { isAdminView } = useAdminSession()
 const editing = ref(false)
 const saving = ref(false)
 const draftTitle = ref('')
@@ -160,7 +160,7 @@ async function saveEdit() {
           </UFormField>
 
           <div
-            v-if="isAdmin"
+            v-if="isAdminView"
             class="flex flex-wrap gap-2 shrink-0"
           >
             <template v-if="!editing">

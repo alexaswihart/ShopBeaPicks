@@ -1,6 +1,8 @@
 export function useAdminSession() {
   const identity = useState<{ email: string, name?: string } | null>('admin-identity', () => null)
   const status = useState<'idle' | 'pending' | 'success' | 'error'>('admin-identity-status', () => 'idle')
+  const adminViewMode = useState('admin-view-mode', () => true)
+  const { clearAccessLoginAttempt } = useAccessLoginRedirect()
 
   async function refresh() {
     if (!import.meta.client) return
@@ -14,17 +16,29 @@ export function useAdminSession() {
       if (email && (email !== 'dev@localhost' || import.meta.dev)) {
         identity.value = res.identity
         status.value = 'success'
+        clearAccessLoginAttempt()
         return
       }
       identity.value = null
+      adminViewMode.value = true
       status.value = 'error'
     } catch {
       identity.value = null
+      adminViewMode.value = true
       status.value = 'error'
     }
   }
 
   const isLoggedIn = computed(() => Boolean(identity.value))
+  const isAdminView = computed(() => isLoggedIn.value && adminViewMode.value)
+
+  function enterAdminView() {
+    adminViewMode.value = true
+  }
+
+  function enterUserView() {
+    adminViewMode.value = false
+  }
 
   if (import.meta.client) {
     onMounted(() => {
@@ -43,6 +57,10 @@ export function useAdminSession() {
   return {
     identity,
     isLoggedIn,
+    isAdminView,
+    adminViewMode,
+    enterAdminView,
+    enterUserView,
     status,
     refresh
   }

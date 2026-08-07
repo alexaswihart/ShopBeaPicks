@@ -6,10 +6,25 @@ const { data, status, error } = await useFetch<{ posts: PostListItem[] }>('/api/
 })
 
 const posts = computed(() => data.value?.posts || [])
+const route = useRoute()
+const toast = useToast()
+const { isAdminView } = useAdminSession()
 
 useSeoMeta({
   title: 'ShopBeaPicks',
   description: 'Latest posts and picks from ShopBeaPicks.'
+})
+
+onMounted(() => {
+  if (route.query.accessError === '1') {
+    toast.add({
+      title: 'Admin sign-in failed',
+      description: 'Access authenticated, but the admin API could not read your session cookie. In Zero Trust → your Access app → Advanced → Cookie settings, turn OFF “Cookie Path Attribute”, then try again.',
+      color: 'error',
+      duration: 12000
+    })
+    navigateTo('/', { replace: true })
+  }
 })
 
 function formatDate(value: string | null) {
@@ -25,13 +40,23 @@ function formatDate(value: string | null) {
 <template>
   <UContainer class="py-10 sm:py-14">
     <div class="max-w-2xl mx-auto">
-      <div class="mb-10">
-        <h1 class="text-3xl sm:text-4xl font-bold text-highlighted tracking-tight">
-          Latest posts
-        </h1>
-        <p class="mt-2 text-muted">
-          Snippets from the ShopBeaPicks feed. Open a post to read the full story.
-        </p>
+      <div class="mb-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-bold text-highlighted tracking-tight">
+            Latest posts
+          </h1>
+          <p class="mt-2 text-muted">
+            Snippets from the ShopBeaPicks feed. Open a post to read the full story.
+          </p>
+        </div>
+        <UButton
+          v-if="isAdminView"
+          to="/admin"
+          color="primary"
+          icon="i-lucide-pencil"
+          label="Edit"
+          class="shrink-0"
+        />
       </div>
 
       <div v-if="status === 'pending'" class="space-y-4">
