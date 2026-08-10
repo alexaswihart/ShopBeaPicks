@@ -35,6 +35,16 @@ const navItems = [
   { label: 'Contact', to: '/contact' }
 ]
 
+const headerNavUi = {
+  link: 'text-canvas hover:text-secondary data-[active]:text-secondary hover:bg-transparent before:bg-transparent'
+}
+
+const slideoverNavUi = {
+  link: 'text-base text-default hover:text-secondary data-[active]:text-secondary hover:bg-transparent before:bg-transparent'
+}
+
+const headerControlClass = 'text-canvas hover:text-secondary hover:bg-transparent'
+
 function goUserView() {
   enterUserView()
   if (onAdminRoute.value) {
@@ -48,79 +58,73 @@ function goUserView() {
     <UHeader
       title="ShopBeaPicks"
       mode="slideover"
-      :ui="{
-        root: 'bg-[#213574] border-[#1B2C61]',
-        left: 'text-[#F189AC]',
-        center: 'text-[#F189AC]',
-        right: 'text-[#F189AC]',
-        toggle: 'text-[#F189AC] hover:bg-[#F189AC]/15',
-        content: 'w-3/4 max-w-[75%]',
-        header: 'bg-[#213574] border-[#1B2C61] text-[#F189AC]'
-      }"
     >
       <template #left>
-        <NuxtLink to="/" class="flex items-center" aria-label="Shop Bea Picks home">
-          <AppLogo />
-        </NuxtLink>
-      </template>
+        <div class="flex items-center gap-4 sm:gap-6">
+          <NuxtLink to="/" class="flex items-center shrink-0" aria-label="Shop Bea Picks home">
+            <AppLogo />
+          </NuxtLink>
 
-      <UNavigationMenu
-        :items="navItems"
-        :ui="{
-          link: 'text-[#F189AC] hover:text-[#FCE7EE] data-[active]:text-[#FCE7EE] before:bg-[#F189AC]/15'
-        }"
-      />
+          <UNavigationMenu
+            :items="navItems"
+            class="hidden lg:flex"
+            :ui="headerNavUi"
+          />
+        </div>
+      </template>
 
       <template #body>
         <UNavigationMenu
           :items="navItems"
           orientation="vertical"
           class="-mx-2.5"
-          :ui="{
-            link: 'text-base'
-          }"
+          :ui="slideoverNavUi"
         />
       </template>
 
       <template #right>
-        <UColorModeButton class="text-[#F189AC] hover:bg-[#F189AC]/15" />
+        <div class="header-utils flex items-center">
+          <UColorModeButton :class="headerControlClass" />
 
-        <UButton
-          v-if="!isLoggedIn"
-          to="/admin"
-          color="neutral"
-          variant="ghost"
-          label="Login"
-          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
-        />
+          <UButton
+            v-if="!isLoggedIn"
+            to="/admin"
+            color="neutral"
+            variant="link"
+            icon="i-ic-outline-login"
+            aria-label="Login"
+            :class="headerControlClass"
+          />
 
-        <UButton
-          v-else-if="onAdminRoute || isAdminView"
-          color="neutral"
-          variant="ghost"
-          label="User View"
-          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
-          @click="goUserView"
-        />
+          <UButton
+            v-else-if="onAdminRoute || isAdminView"
+            color="neutral"
+            variant="link"
+            label="User View"
+            :class="headerControlClass"
+            @click="goUserView"
+          />
 
-        <UButton
-          v-else
-          color="neutral"
-          variant="ghost"
-          label="Admin View"
-          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
-          @click="enterAdminView"
-        />
+          <UButton
+            v-else
+            color="neutral"
+            variant="link"
+            label="Admin View"
+            :class="headerControlClass"
+            @click="enterAdminView"
+          />
 
-        <UButton
-          v-if="isLoggedIn"
-          to="/admin/logout"
-          color="neutral"
-          variant="ghost"
-          label="Logout"
-          external
-          class="text-[#F189AC] hover:bg-[#F189AC]/15 hover:text-[#FCE7EE]"
-        />
+          <UButton
+            v-if="isLoggedIn"
+            to="/admin/logout"
+            color="neutral"
+            variant="link"
+            icon="i-ic-outline-logout"
+            aria-label="Logout"
+            external
+            :class="headerControlClass"
+          />
+        </div>
       </template>
     </UHeader>
 

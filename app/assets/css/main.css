@@ -2,22 +2,26 @@
 @import "@nuxt/ui";
 
 @theme static {
-  --font-sans: 'Public Sans', sans-serif;
+  --font-sans: 'Raleway', sans-serif;
 
-  /* Primary #213574 */
+  /* Canvas */
+  --color-canvas: #F4F9FF;
+
+  /* Primary — navy */
   --color-navy-50: #EEF1F8;
   --color-navy-100: #D5DBEC;
   --color-navy-200: #ABB7D9;
   --color-navy-300: #7A8CBE;
   --color-navy-400: #4F64A0;
   --color-navy-500: #334887;
+  --color-navy-550: #2A3F78;
   --color-navy-600: #213574;
   --color-navy-700: #1B2C61;
   --color-navy-800: #15234E;
   --color-navy-900: #101A3B;
   --color-navy-950: #0A1026;
 
-  /* Secondary #F189AC */
+  /* Secondary — blush */
   --color-blush-50: #FEF6F8;
   --color-blush-100: #FCE7EE;
   --color-blush-200: #F9D0DE;
@@ -30,7 +34,7 @@
   --color-blush-900: #6C3E4D;
   --color-blush-950: #432630;
 
-  /* Tertiary #5086C4 */
+  /* Tertiary — sky */
   --color-sky-50: #F1F5FA;
   --color-sky-100: #DCE7F3;
   --color-sky-200: #B9CFE7;
@@ -45,58 +49,58 @@
 }
 
 /*
-  Light theme: canvas #F4F9FF, all chrome/text from primary (navy)
-  or secondary (blush). No gray neutrals.
+  Semantic UI tokens — hex lives only in @theme above.
   Declared outside @layer so overrides stick.
 */
 :root,
 .light {
   --ui-header-height: 6.5rem;
-  --ui-bg: #F4F9FF;
-  --ui-bg-muted: #F9D0DE;
-  --ui-bg-elevated: #FCE7EE;
-  --ui-bg-accented: #F9D0DE;
-  --ui-bg-inverted: #213574;
+  --ui-bg: var(--color-canvas);
+  --ui-bg-muted: var(--color-blush-200);
+  --ui-bg-elevated: var(--color-blush-100);
+  --ui-bg-accented: var(--color-blush-200);
+  --ui-bg-inverted: var(--color-navy-600);
 
-  --ui-text-dimmed: #7A8CBE;
-  --ui-text-muted: #4F64A0;
-  --ui-text-toned: #334887;
-  --ui-text: #213574;
-  --ui-text-highlighted: #15234E;
-  --ui-text-inverted: #F4F9FF;
+  --ui-text-dimmed: var(--color-navy-300);
+  --ui-text-muted: var(--color-navy-400);
+  --ui-text-toned: var(--color-navy-500);
+  --ui-text: var(--color-navy-600);
+  --ui-text-highlighted: var(--color-navy-800);
+  --ui-text-inverted: var(--color-canvas);
 
-  --ui-border: #ABB7D9;
-  --ui-border-muted: #D5DBEC;
-  --ui-border-accented: #7A8CBE;
-  --ui-border-inverted: #213574;
+  --ui-border: var(--color-navy-200);
+  --ui-border-muted: var(--color-navy-100);
+  --ui-border-accented: var(--color-navy-300);
+  --ui-border-inverted: var(--color-navy-600);
 
-  --ui-primary: #213574;
-  --ui-secondary: #F189AC;
+  --ui-primary: var(--color-navy-600);
+  --ui-secondary: var(--color-blush-500);
+  --ui-tertiary: var(--color-sky-500);
 }
 
 .dark {
   --ui-header-height: 6.5rem;
-  /* A few shades lighter than brand navy #213574 */
-  --ui-bg: #334887;
-  --ui-bg-muted: #2A3F78;
-  --ui-bg-elevated: #213574;
-  --ui-bg-accented: #4F64A0;
-  --ui-bg-inverted: #F189AC;
+  --ui-bg: var(--color-navy-500);
+  --ui-bg-muted: var(--color-navy-550);
+  --ui-bg-elevated: var(--color-navy-600);
+  --ui-bg-accented: var(--color-navy-400);
+  --ui-bg-inverted: var(--color-blush-500);
 
-  --ui-text-dimmed: #ABB7D9;
-  --ui-text-muted: #D5DBEC;
-  --ui-text-toned: #EEF1F8;
-  --ui-text: #F4F9FF;
-  --ui-text-highlighted: #F4F9FF;
-  --ui-text-inverted: #213574;
+  --ui-text-dimmed: var(--color-navy-200);
+  --ui-text-muted: var(--color-navy-100);
+  --ui-text-toned: var(--color-navy-50);
+  --ui-text: var(--color-canvas);
+  --ui-text-highlighted: var(--color-canvas);
+  --ui-text-inverted: var(--color-navy-600);
 
-  --ui-border: #4F64A0;
-  --ui-border-muted: #2A3F78;
-  --ui-border-accented: #7A8CBE;
-  --ui-border-inverted: #F189AC;
+  --ui-border: var(--color-navy-400);
+  --ui-border-muted: var(--color-navy-550);
+  --ui-border-accented: var(--color-navy-300);
+  --ui-border-inverted: var(--color-blush-500);
 
-  --ui-primary: #F189AC;
-  --ui-secondary: #F189AC;
+  --ui-primary: var(--color-blush-500);
+  --ui-secondary: var(--color-blush-500);
+  --ui-tertiary: var(--color-sky-400);
 }
 
 html,
@@ -104,4 +108,12 @@ body,
 #__nuxt {
   background-color: var(--ui-bg);
   color: var(--ui-text);
+}
+
+/* Utility controls live in #right (shared by bar + slideover).
+   Hide them in the main header on mobile; keep them in the slideover header. */
+@media (max-width: 1023px) {
+  [data-slot="root"] [data-slot="right"] .header-utils {
+    display: none;
+  }
 }

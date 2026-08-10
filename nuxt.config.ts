@@ -26,6 +26,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  fonts: {
+    families: [
+      { name: 'Raleway', provider: 'google' }
+    ]
+  },
+
   runtimeConfig: {
     // Local-only: set NUXT_ADMIN_DEV_BYPASS=true in .env
     // Production builds use .env.production (false) + wrangler vars
