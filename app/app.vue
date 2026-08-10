@@ -135,7 +135,7 @@ function goUserView() {
     <UFooter>
       <template #left>
         <p class="text-sm text-muted">
-          © {{ new Date().getFullYear() }} {{ title }}
+          {{ new Date().getFullYear() }} {{ title }}
         </p>
       </template>
       <template #right>
