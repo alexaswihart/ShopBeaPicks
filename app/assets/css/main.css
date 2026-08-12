@@ -110,6 +110,13 @@ body,
   color: var(--ui-text);
 }
 
+/* Editor images */
+.tiptap img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 /* Utility controls live in #right (shared by bar + slideover).
    Hide them in the main header on mobile; keep them in the slideover header. */
 @media (max-width: 1023px) {

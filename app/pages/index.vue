@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PostListItem } from '#shared/types/post'
+import { parseCoverImage } from '#shared/utils/coverImage'
 
 const { data, status, error } = await useFetch<{ posts: PostListItem[] }>('/api/posts', {
   key: 'published-posts'
@@ -9,6 +10,10 @@ const posts = computed(() => data.value?.posts || [])
 const route = useRoute()
 const toast = useToast()
 const { isAdminView } = useAdminSession()
+
+function coverFor(post: PostListItem) {
+  return parseCoverImage(post.cover_image)
+}
 
 useSeoMeta({
   title: 'ShopBeaPicks',
@@ -89,9 +94,10 @@ function formatDate(value: string | null) {
           >
             <div class="flex gap-4">
               <img
-                v-if="post.cover_image"
-                :src="post.cover_image"
-                :alt="post.title"
+                v-if="coverFor(post)"
+                :src="coverFor(post)!.url"
+                :alt="coverFor(post)!.alt || post.title"
+                :title="coverFor(post)!.title || undefined"
                 class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-md shrink-0"
               >
               <div class="min-w-0 flex-1">

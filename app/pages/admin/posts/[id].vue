@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import type { EditorToolbarItem } from '@nuxt/ui'
+import type { EditorCustomHandlers, EditorToolbarItem } from '@nuxt/ui'
+import type { Editor } from '@tiptap/vue-3'
 import type { Post, PostStatus } from '#shared/types/post'
+import type { CoverImageMeta } from '#shared/utils/coverImage'
+import { parseCoverImage, serializeCoverImage } from '#shared/utils/coverImage'
 import { slugify } from '~/utils/slugify'
+import { ImageUpload } from '~/components/editor/EditorImageUploadExtension'
+import { ParagraphWithEmptyLines } from '~/components/editor/ParagraphWithEmptyLines'
 
 definePageMeta({
   middleware: 'admin'
@@ -19,10 +24,19 @@ const title = ref('')
 const slug = ref('')
 const excerpt = ref('')
 const content = ref('')
-const coverImage = ref('')
+const cover = ref<CoverImageMeta | null>(null)
 const status = ref<PostStatus>('draft')
 const slugTouched = ref(false)
 const saving = ref(false)
+
+const customHandlers = {
+  imageUpload: {
+    canExecute: (editor: Editor) => editor.can().insertContent({ type: 'imageUpload' }),
+    execute: (editor: Editor) => editor.chain().focus().insertContent({ type: 'imageUpload' }),
+    isActive: (editor: Editor) => editor.isActive('imageUpload'),
+    isDisabled: undefined
+  }
+} satisfies EditorCustomHandlers
 
 const toolbarItems = [
   [{
@@ -89,11 +103,11 @@ const toolbarItems = [
     icon: 'i-lucide-link',
     tooltip: { text: 'Link' }
   }, {
-    kind: 'image',
+    kind: 'imageUpload',
     icon: 'i-lucide-image',
-    tooltip: { text: 'Image URL' }
+    tooltip: { text: 'Upload image' }
   }]
-] satisfies EditorToolbarItem[][]
+] satisfies EditorToolbarItem<typeof customHandlers>[][]
 
 watch(title, (value) => {
   if (!slugTouched.value && isNew.value) {
@@ -118,7 +132,7 @@ if (!isNew.value) {
   slug.value = post.slug
   excerpt.value = post.excerpt
   content.value = post.content
-  coverImage.value = post.cover_image || ''
+  cover.value = parseCoverImage(post.cover_image)
   status.value = post.status
   slugTouched.value = true
 }
@@ -139,7 +153,12 @@ async function onCoverUpload(event: Event) {
   const file = input.files?.[0]
   if (!file) return
   try {
-    coverImage.value = await uploadImage(file)
+    const url = await uploadImage(file)
+    cover.value = {
+      url,
+      alt: cover.value?.alt || '',
+      title: cover.value?.title || ''
+    }
     toast.add({ title: 'Cover image uploaded', color: 'success' })
   } catch {
     toast.add({ title: 'Cover upload failed', color: 'error' })
@@ -148,20 +167,8 @@ async function onCoverUpload(event: Event) {
   }
 }
 
-async function onBodyImageUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  try {
-    const url = await uploadImage(file)
-    const imageMarkdown = `\n\n![${file.name}](${url})\n\n`
-    content.value = `${content.value || ''}${imageMarkdown}`
-    toast.add({ title: 'Image added to post', color: 'success' })
-  } catch {
-    toast.add({ title: 'Image upload failed', color: 'error' })
-  } finally {
-    input.value = ''
-  }
+function removeCover() {
+  cover.value = null
 }
 
 async function save(nextStatus?: PostStatus) {
@@ -176,7 +183,7 @@ async function save(nextStatus?: PostStatus) {
     slug: slug.value.trim() || undefined,
     excerpt: excerpt.value.trim(),
     content: content.value,
-    cover_image: coverImage.value.trim() || null,
+    cover_image: serializeCoverImage(cover.value),
     status: nextStatus || status.value
   }
 
@@ -284,32 +291,14 @@ useSeoMeta({
 
         <UFormField label="Body">
           <div class="rounded-lg border border-default overflow-hidden bg-default">
-            <div class="flex items-center gap-2 border-b border-muted px-2 py-1.5 bg-elevated">
-              <label class="inline-flex">
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  @change="onBodyImageUpload"
-                >
-                <UButton
-                  as="span"
-                  size="sm"
-                  color="neutral"
-                  variant="ghost"
-                  icon="i-lucide-image-up"
-                  label="Upload image"
-                />
-              </label>
-              <span class="text-xs text-muted">
-                or use the image toolbar button for an external URL
-              </span>
-            </div>
             <UEditor
               v-slot="{ editor }"
               v-model="content"
               content-type="markdown"
-              placeholder="Write your post…"
+              :placeholder="{ placeholder: 'Write your post…', mode: 'firstLine' }"
+              :starter-kit="{ paragraph: false }"
+              :extensions="[ParagraphWithEmptyLines, ImageUpload]"
+              :handlers="customHandlers"
               class="min-h-80 w-full px-4 py-3"
             >
               <UEditorToolbar
@@ -317,6 +306,7 @@ useSeoMeta({
                 :items="toolbarItems"
                 class="border-b border-muted px-2 py-1.5 bg-elevated sticky top-0 z-10 overflow-x-auto"
               />
+              <EditorImageBubble :editor="editor" />
             </UEditor>
           </div>
         </UFormField>
@@ -332,44 +322,58 @@ useSeoMeta({
           />
         </UFormField>
 
-        <UFormField label="Cover image URL">
-          <UInput
-            v-model="coverImage"
-            placeholder="https://… or /api/images/…"
-            class="w-full"
-          />
-          <div class="mt-2 flex gap-2">
-            <label class="inline-flex">
-              <input
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="onCoverUpload"
+        <UFormField label="Cover image">
+          <div class="space-y-3">
+            <template v-if="cover">
+              <img
+                :src="cover.url"
+                :alt="cover.alt || 'Cover preview'"
+                class="w-full rounded-md object-cover max-h-40"
               >
+              <UInput
+                v-model="cover.alt"
+                size="sm"
+                placeholder="Alt text"
+                aria-label="Cover image alt text"
+                class="w-full"
+              />
+              <UInput
+                v-model="cover.title"
+                size="sm"
+                placeholder="Title (tooltip)"
+                aria-label="Cover image title"
+                class="w-full"
+              />
+            </template>
+
+            <div class="flex flex-wrap gap-2">
+              <label class="inline-flex">
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="onCoverUpload"
+                >
+                <UButton
+                  as="span"
+                  size="sm"
+                  color="neutral"
+                  variant="soft"
+                  icon="i-lucide-upload"
+                  :label="cover ? 'Replace' : 'Upload'"
+                />
+              </label>
               <UButton
-                as="span"
+                v-if="cover"
                 size="sm"
                 color="neutral"
-                variant="soft"
-                icon="i-lucide-upload"
-                label="Upload"
+                variant="ghost"
+                icon="i-lucide-trash"
+                label="Remove"
+                @click="removeCover"
               />
-            </label>
-            <UButton
-              v-if="coverImage"
-              size="sm"
-              color="neutral"
-              variant="ghost"
-              label="Clear"
-              @click="coverImage = ''"
-            />
+            </div>
           </div>
-          <img
-            v-if="coverImage"
-            :src="coverImage"
-            alt="Cover preview"
-            class="mt-3 w-full rounded-md object-cover max-h-40"
-          >
         </UFormField>
       </aside>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { marked } from 'marked'
 import type { Post } from '#shared/types/post'
+import { parseCoverImage } from '#shared/utils/coverImage'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug || ''))
@@ -10,6 +11,7 @@ const { data, error, status } = await useFetch<{ post: Post }>(() => `/api/posts
 })
 
 const post = computed(() => data.value?.post)
+const cover = computed(() => parseCoverImage(post.value?.cover_image))
 
 const html = computed(() => {
   if (!post.value?.content) return ''
@@ -21,7 +23,7 @@ watchEffect(() => {
   useSeoMeta({
     title: `${post.value.title} · ShopBeaPicks`,
     description: post.value.excerpt || post.value.title,
-    ogImage: post.value.cover_image || undefined
+    ogImage: cover.value?.url || undefined
   })
 })
 
@@ -74,9 +76,10 @@ function formatDate(value: string | null) {
         </header>
 
         <img
-          v-if="post.cover_image"
-          :src="post.cover_image"
-          :alt="post.title"
+          v-if="cover"
+          :src="cover.url"
+          :alt="cover.alt || post.title"
+          :title="cover.title || undefined"
           class="w-full rounded-lg mb-8 object-cover max-h-96"
         >
 

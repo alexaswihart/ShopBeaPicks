@@ -2,6 +2,7 @@
 import { marked } from 'marked'
 import type { EditorToolbarItem } from '@nuxt/ui'
 import type { PageSlug, SitePage as SitePageModel } from '#shared/types/page'
+import { ParagraphWithEmptyLines } from '~/components/editor/ParagraphWithEmptyLines'
 
 const props = defineProps<{
   slug: PageSlug
@@ -216,7 +217,9 @@ async function saveEdit() {
             v-slot="{ editor }"
             v-model="draftContent"
             content-type="markdown"
-            placeholder="Write page content…"
+            :placeholder="{ placeholder: 'Write page content…', mode: 'firstLine' }"
+            :starter-kit="{ paragraph: false }"
+            :extensions="[ParagraphWithEmptyLines]"
             class="min-h-64 w-full px-4 py-3"
           >
             <UEditorToolbar
