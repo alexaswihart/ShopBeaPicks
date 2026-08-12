@@ -5,9 +5,11 @@ import { parseCoverImage } from '#shared/utils/coverImage'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug || ''))
+const { isAdminView } = useAdminSession()
 
 const { data, error, status } = await useFetch<{ post: Post }>(() => `/api/posts/${slug.value}`, {
-  key: () => `post-${slug.value}`
+  key: () => `post-${slug.value}`,
+  credentials: 'include'
 })
 
 const post = computed(() => data.value?.post)
@@ -40,14 +42,23 @@ function formatDate(value: string | null) {
 <template>
   <UContainer class="py-10 sm:py-14">
     <div class="max-w-2xl mx-auto">
-      <UButton
-        to="/"
-        color="neutral"
-        variant="ghost"
-        icon="i-lucide-arrow-left"
-        label="All posts"
-        class="mb-6 -ml-2"
-      />
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+        <UButton
+          to="/"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-arrow-left"
+          label="All posts"
+          class="-ml-2"
+        />
+        <UButton
+          v-if="isAdminView && post"
+          :to="`/admin/posts/${post.id}`"
+          color="primary"
+          icon="i-lucide-pencil"
+          label="Edit"
+        />
+      </div>
 
       <div v-if="status === 'pending'" class="space-y-4">
         <USkeleton class="h-10 w-3/4" />

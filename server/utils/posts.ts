@@ -90,6 +90,15 @@ export async function getPublishedPostBySlug(event: H3Event, slug: string): Prom
   return row ? mapPost(row) : null
 }
 
+export async function getPostBySlug(event: H3Event, slug: string): Promise<Post | null> {
+  const { DB } = useCloudflareEnv(event)
+  const row = await DB.prepare(`
+    SELECT * FROM posts WHERE slug = ?
+  `).bind(slug).first<PostRow>()
+
+  return row ? mapPost(row) : null
+}
+
 export async function getPostById(event: H3Event, id: string): Promise<Post | null> {
   const { DB } = useCloudflareEnv(event)
   const row = await DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first<PostRow>()

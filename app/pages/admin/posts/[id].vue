@@ -239,14 +239,14 @@ useSeoMeta({
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div class="flex items-center gap-2">
         <UButton
-          to="/admin"
+          to="/"
           color="neutral"
           variant="ghost"
           icon="i-lucide-arrow-left"
           label="All posts"
         />
         <UBadge
-          :color="status === 'published' ? 'success' : 'neutral'"
+          :color="status === 'published' ? 'success' : 'secondary'"
           variant="subtle"
         >
           {{ status }}
