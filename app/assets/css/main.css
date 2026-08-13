@@ -2,7 +2,9 @@
 @import "@nuxt/ui";
 
 @theme static {
-  --font-sans: 'Raleway', sans-serif;
+  --font-sans: 'Poppins', sans-serif;
+  --font-display: 'Poppins', sans-serif;
+  --font-editor: 'Nunito Sans', sans-serif;
 
   /* Canvas */
   --color-canvas: #F4F9FF;
@@ -110,11 +112,138 @@ body,
   color: var(--ui-text);
 }
 
+/* Editor / body copy: Poppins 14px by default */
+.tiptap,
+.ProseMirror,
+.prose {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.tiptap > *,
+.ProseMirror > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.tiptap p,
+.ProseMirror p,
+.prose p {
+  line-height: 1.5 !important;
+  margin: 0;
+  min-height: 1.5em;
+}
+
+/* Empty paragraphs collapse in HTML but take a line in TipTap — keep both modes equal */
+.prose p:empty::before,
+.tiptap p:empty::before,
+.ProseMirror p:empty::before {
+  content: '\00a0';
+}
+
+/* Match editor link treatment: accent color + underline on hover */
+.prose a {
+  color: var(--ui-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.prose a:hover {
+  border-bottom-color: var(--ui-secondary);
+}
+
 /* Editor images */
-.tiptap img {
+.tiptap img,
+.ProseMirror img,
+.prose img {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+/* Image resize handles (TipTap ResizableNodeView) */
+.tiptap [data-resize-handle],
+.ProseMirror [data-resize-handle] {
+  position: absolute;
+  z-index: 10;
+  background: var(--color-navy-600);
+  border: 1px solid var(--color-canvas);
+  border-radius: 2px;
+}
+
+.tiptap [data-resize-handle]:hover,
+.ProseMirror [data-resize-handle]:hover {
+  background: var(--color-blush-500);
+}
+
+.tiptap [data-resize-handle='top-left'],
+.tiptap [data-resize-handle='top-right'],
+.tiptap [data-resize-handle='bottom-left'],
+.tiptap [data-resize-handle='bottom-right'],
+.ProseMirror [data-resize-handle='top-left'],
+.ProseMirror [data-resize-handle='top-right'],
+.ProseMirror [data-resize-handle='bottom-left'],
+.ProseMirror [data-resize-handle='bottom-right'] {
+  width: 8px;
+  height: 8px;
+}
+
+.tiptap [data-resize-handle='top-left'],
+.ProseMirror [data-resize-handle='top-left'] {
+  top: -4px;
+  left: -4px;
+  cursor: nwse-resize;
+}
+
+.tiptap [data-resize-handle='top-right'],
+.ProseMirror [data-resize-handle='top-right'] {
+  top: -4px;
+  right: -4px;
+  cursor: nesw-resize;
+}
+
+.tiptap [data-resize-handle='bottom-left'],
+.ProseMirror [data-resize-handle='bottom-left'] {
+  bottom: -4px;
+  left: -4px;
+  cursor: nesw-resize;
+}
+
+.tiptap [data-resize-handle='bottom-right'],
+.ProseMirror [data-resize-handle='bottom-right'] {
+  bottom: -4px;
+  right: -4px;
+  cursor: nwse-resize;
+}
+
+.tiptap [data-resize-state='true'] [data-resize-wrapper],
+.ProseMirror [data-resize-state='true'] [data-resize-wrapper] {
+  outline: 1px solid color-mix(in srgb, var(--color-navy-600) 40%, transparent);
+  border-radius: 0.125rem;
+}
+
+/* Headings: Poppins Bold (editor + rendered content) */
+.poppins-bold,
+.tiptap h1,
+.tiptap h2,
+.tiptap h3,
+.tiptap h4,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: normal;
 }
 
 /* Utility controls live in #right (shared by bar + slideover).

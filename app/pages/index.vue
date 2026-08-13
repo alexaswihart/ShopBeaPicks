@@ -1,11 +1,74 @@
 <script setup lang="ts">
 import type { PostListItem } from '#shared/types/post'
+import type { HomeSettings } from '#shared/types/siteSettings'
+import { DEFAULT_HOME_SETTINGS } from '#shared/types/siteSettings'
 import { parseCoverImage } from '#shared/utils/coverImage'
 
 const toast = useToast()
 const route = useRoute()
 const { isLoggedIn, isAdminView, status: sessionStatus } = useAdminSession()
 const { redirectToAccessLogin } = useAccessLoginRedirect('/')
+
+const {
+  data: settingsData,
+  refresh: refreshSettings
+} = await useFetch<{ settings: HomeSettings }>('/api/site-settings', {
+  key: 'home-settings'
+})
+
+const homeTitle = computed(() => settingsData.value?.settings.homeTitle || DEFAULT_HOME_SETTINGS.homeTitle)
+const homeSubtitle = computed(() => settingsData.value?.settings.homeSubtitle || DEFAULT_HOME_SETTINGS.homeSubtitle)
+
+const editingHeader = ref(false)
+const savingHeader = ref(false)
+const draftTitle = ref('')
+const draftSubtitle = ref('')
+
+function startHeaderEdit() {
+  draftTitle.value = homeTitle.value
+  draftSubtitle.value = homeSubtitle.value
+  editingHeader.value = true
+}
+
+function cancelHeaderEdit() {
+  editingHeader.value = false
+}
+
+async function saveHeaderEdit() {
+  if (!draftTitle.value.trim()) {
+    toast.add({ title: 'Title is required', color: 'error' })
+    return
+  }
+
+  savingHeader.value = true
+  try {
+    await $fetch('/api/admin/site-settings', {
+      method: 'PUT',
+      credentials: 'include',
+      body: {
+        homeTitle: draftTitle.value.trim(),
+        homeSubtitle: draftSubtitle.value.trim()
+      }
+    })
+    toast.add({ title: 'Home header saved', color: 'success' })
+    editingHeader.value = false
+    await refreshSettings()
+  } catch (e: unknown) {
+    const statusCode = e && typeof e === 'object' && 'statusCode' in e
+      ? Number((e as { statusCode?: number }).statusCode)
+      : 0
+    if (statusCode === 401 || statusCode === 403) {
+      redirectToAccessLogin()
+      return
+    }
+    const message = e && typeof e === 'object' && 'data' in e
+      ? String((e as { data?: { statusMessage?: string } }).data?.statusMessage || 'Save failed')
+      : 'Save failed'
+    toast.add({ title: message, color: 'error' })
+  } finally {
+    savingHeader.value = false
+  }
+}
 
 const {
   data: publishedData,
@@ -43,6 +106,9 @@ watch(
 )
 
 watch(isAdminView, (adminView) => {
+  if (!adminView) {
+    editingHeader.value = false
+  }
   if (adminView && isLoggedIn.value) {
     loadAdminPosts()
   }
@@ -93,7 +159,7 @@ function coverFor(post: PostListItem) {
 
 useSeoMeta({
   title: 'ShopBeaPicks',
-  description: 'Latest posts and picks from ShopBeaPicks.'
+  description: () => homeSubtitle.value
 })
 
 onMounted(() => {
@@ -151,22 +217,68 @@ function formatDate(value: string | null) {
   <UContainer class="py-10 sm:py-14">
     <div class="max-w-2xl mx-auto">
       <div class="mb-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <h1 class="text-3xl sm:text-4xl font-bold text-highlighted tracking-tight">
-            Latest posts
-          </h1>
-          <p class="mt-2 text-muted">
-            Snippets from the ShopBeaPicks feed. Open a post to read the full story.
-          </p>
+        <div class="min-w-0 flex-1">
+          <template v-if="!editingHeader">
+            <h1 class="text-3xl sm:text-4xl font-bold text-navy-600 dark:text-highlighted tracking-tight">
+              {{ homeTitle }}
+            </h1>
+            <p class="mt-2 text-muted">
+              {{ homeSubtitle }}
+            </p>
+          </template>
+          <div
+            v-else
+            class="space-y-3"
+          >
+            <UInput
+              v-model="draftTitle"
+              size="xl"
+              class="w-full font-bold"
+              aria-label="Home heading"
+            />
+            <UTextarea
+              v-model="draftSubtitle"
+              :rows="2"
+              class="w-full"
+              aria-label="Home subtitle"
+            />
+          </div>
         </div>
-        <UButton
+        <div
           v-if="isAdminView"
-          to="/admin/posts/new"
-          color="primary"
-          icon="i-lucide-plus"
-          label="New post"
-          class="shrink-0"
-        />
+          class="flex flex-wrap gap-2 shrink-0"
+        >
+          <template v-if="!editingHeader">
+            <UButton
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-pencil"
+              label="Edit header"
+              @click="startHeaderEdit"
+            />
+            <UButton
+              to="/admin/posts/new"
+              color="primary"
+              icon="i-lucide-plus"
+              label="New post"
+            />
+          </template>
+          <template v-else>
+            <UButton
+              color="neutral"
+              variant="soft"
+              label="Cancel"
+              :disabled="savingHeader"
+              @click="cancelHeaderEdit"
+            />
+            <UButton
+              color="primary"
+              label="Save"
+              :loading="savingHeader"
+              @click="saveHeaderEdit"
+            />
+          </template>
+        </div>
       </div>
 
       <div v-if="listStatus === 'pending'" class="space-y-4">
@@ -226,13 +338,13 @@ function formatDate(value: string | null) {
                       {{ post.status }}
                     </UBadge>
                   </div>
-                  <h2 class="text-xl font-semibold text-highlighted group-hover:text-secondary transition-colors">
+                  <h2 class="text-xl font-semibold text-navy-600 dark:text-highlighted group-hover:text-secondary transition-colors">
                     {{ post.title }}
                   </h2>
                   <p class="mt-2 text-muted line-clamp-3">
                     {{ post.excerpt || 'Read the full story →' }}
                   </p>
-                  <span class="mt-3 inline-flex items-center gap-1 text-sm text-tertiary font-medium">
+                  <span class="mt-3 inline-flex items-center gap-1 text-sm text-sky-500 font-medium">
                     Read more
                     <UIcon name="i-lucide-arrow-right" class="size-4" />
                   </span>

@@ -28,7 +28,18 @@ export default defineNuxtConfig({
 
   fonts: {
     families: [
-      { name: 'Raleway', provider: 'google' }
+      {
+        name: 'Poppins',
+        provider: 'google',
+        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        styles: ['normal', 'italic']
+      },
+      {
+        name: 'Nunito Sans',
+        provider: 'google',
+        weights: [400],
+        styles: ['normal', 'italic']
+      }
     ]
   },
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { marked } from 'marked'
 import type { Post } from '#shared/types/post'
 import { parseCoverImage } from '#shared/utils/coverImage'
+import { contentToHtml } from '~/utils/contentHtml'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug || ''))
@@ -15,10 +15,7 @@ const { data, error, status } = await useFetch<{ post: Post }>(() => `/api/posts
 const post = computed(() => data.value?.post)
 const cover = computed(() => parseCoverImage(post.value?.cover_image))
 
-const html = computed(() => {
-  if (!post.value?.content) return ''
-  return marked.parse(post.value.content, { async: false }) as string
-})
+const html = computed(() => contentToHtml(post.value?.content || ''))
 
 watchEffect(() => {
   if (!post.value) return
@@ -78,7 +75,7 @@ function formatDate(value: string | null) {
           <p v-if="post.published_at" class="text-sm text-muted mb-2">
             {{ formatDate(post.published_at) }}
           </p>
-          <h1 class="text-3xl sm:text-4xl font-bold text-highlighted tracking-tight">
+          <h1 class="text-3xl sm:text-4xl font-bold text-navy-600 dark:text-highlighted tracking-tight">
             {{ post.title }}
           </h1>
           <p v-if="post.excerpt" class="mt-3 text-lg text-muted">
@@ -95,7 +92,7 @@ function formatDate(value: string | null) {
         >
 
         <div
-          class="prose max-w-none text-default prose-headings:text-highlighted prose-a:text-primary prose-strong:text-highlighted prose-blockquote:border-secondary prose-blockquote:bg-muted/40 prose-blockquote:text-toned"
+          class="prose max-w-none text-default prose-headings:text-highlighted prose-strong:text-highlighted prose-blockquote:border-secondary prose-blockquote:bg-muted/40 prose-blockquote:text-toned"
           v-html="html"
         />
       </article>

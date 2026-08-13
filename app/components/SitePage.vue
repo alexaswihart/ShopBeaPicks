@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { marked } from 'marked'
-import type { EditorToolbarItem } from '@nuxt/ui'
 import type { PageSlug, SitePage as SitePageModel } from '#shared/types/page'
-import { ParagraphWithEmptyLines } from '~/components/editor/ParagraphWithEmptyLines'
+import type { SiteSettings } from '#shared/types/siteSettings'
+import { DEFAULT_SITE_SETTINGS } from '#shared/types/siteSettings'
+import { contentToHtml, toEditorHtml } from '~/utils/contentHtml'
+import { ImageUpload } from '~/components/editor/EditorImageUploadExtension'
+import { fontExtensions } from '~/components/editor/fontExtensions'
 
 const props = defineProps<{
   slug: PageSlug
@@ -16,17 +18,51 @@ const { data, status, error, refresh } = await useFetch<{ page: SitePageModel }>
   { key: () => `site-page-${props.slug}` }
 )
 
+const {
+  data: settingsData,
+  refresh: refreshSettings
+} = await useFetch<{ settings: SiteSettings }>('/api/site-settings', {
+  key: 'site-settings',
+  immediate: props.showAffiliateDisclosure === true
+})
+
 const page = computed(() => data.value?.page)
 const { isAdminView } = useAdminSession()
 const editing = ref(false)
 const saving = ref(false)
 const draftTitle = ref('')
+/** Latest HTML from the editor (updated on every change). */
 const draftContent = ref('')
+/**
+ * Seeded into UEditor once per edit session, then set to `null` so Nuxt UI's
+ * modelValue watcher cannot call setContent and wipe new empty paragraphs.
+ */
+const editorModel = ref<string | null>(null)
+const draftAffiliateEnabled = ref(true)
+const draftAffiliateTitle = ref('')
+const draftAffiliateDescription = ref('')
 
-const html = computed(() => {
-  if (!page.value?.content) return ''
-  return marked.parse(page.value.content, { async: false }) as string
+const affiliateEnabled = computed(() =>
+  settingsData.value?.settings.affiliateDisclosureEnabled
+  ?? DEFAULT_SITE_SETTINGS.affiliateDisclosureEnabled
+)
+const affiliateTitle = computed(() =>
+  settingsData.value?.settings.affiliateDisclosureTitle
+  || DEFAULT_SITE_SETTINGS.affiliateDisclosureTitle
+)
+const affiliateDescription = computed(() =>
+  settingsData.value?.settings.affiliateDisclosureDescription
+  || DEFAULT_SITE_SETTINGS.affiliateDisclosureDescription
+)
+
+/** Visitors only see it when enabled; admins also see it when hidden (with a badge). */
+const showAffiliateAlert = computed(() => {
+  if (!props.showAffiliateDisclosure) return false
+  if (affiliateEnabled.value) return true
+  return isAdminView.value
 })
+
+const html = computed(() => contentToHtml(page.value?.content || ''))
 
 watchEffect(() => {
   if (!page.value) return
@@ -36,70 +72,84 @@ watchEffect(() => {
   })
 })
 
+const { customHandlers, toolbarItems } = useEditorFontToolbar({ withImageUpload: true })
 
-const toolbarItems = [
-  [{
-    kind: 'undo',
-    icon: 'i-lucide-undo',
-    tooltip: { text: 'Undo' }
-  }, {
-    kind: 'redo',
-    icon: 'i-lucide-redo',
-    tooltip: { text: 'Redo' }
-  }],
-  [{
-    kind: 'heading',
-    level: 2,
-    icon: 'i-lucide-heading-2',
-    tooltip: { text: 'Heading 2' }
-  }, {
-    kind: 'heading',
-    level: 3,
-    icon: 'i-lucide-heading-3',
-    tooltip: { text: 'Heading 3' }
-  }],
-  [{
-    kind: 'mark',
-    mark: 'bold',
-    icon: 'i-lucide-bold',
-    tooltip: { text: 'Bold' }
-  }, {
-    kind: 'mark',
-    mark: 'italic',
-    icon: 'i-lucide-italic',
-    tooltip: { text: 'Italic' }
-  }],
-  [{
-    kind: 'bulletList',
-    icon: 'i-lucide-list',
-    tooltip: { text: 'Bullet list' }
-  }, {
-    kind: 'orderedList',
-    icon: 'i-lucide-list-ordered',
-    tooltip: { text: 'Ordered list' }
-  }, {
-    kind: 'link',
-    icon: 'i-lucide-link',
-    tooltip: { text: 'Link' }
-  }]
-] satisfies EditorToolbarItem[][]
+const imageOptions = {
+  resize: {
+    enabled: true,
+    directions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const,
+    minWidth: 48,
+    minHeight: 48,
+    alwaysPreserveAspectRatio: true
+  }
+}
 
 function startEdit() {
   if (!page.value) return
   draftTitle.value = page.value.title
-  draftContent.value = page.value.content
+  const seedHtml = toEditorHtml(page.value.content)
+  draftContent.value = seedHtml
+  editorModel.value = seedHtml
+  if (props.showAffiliateDisclosure) {
+    draftAffiliateEnabled.value = affiliateEnabled.value
+    draftAffiliateTitle.value = affiliateTitle.value
+    draftAffiliateDescription.value = affiliateDescription.value
+  }
+  editSession.value += 1
   editing.value = true
 }
 
 function cancelEdit() {
   editing.value = false
+  editorModel.value = null
 }
+
+function onEditorUpdate(value: unknown) {
+  if (typeof value === 'string') {
+    draftContent.value = value
+  }
+}
+
+const editSession = ref(0)
+const pageEditor = useTemplateRef<{
+  editor?: {
+    chain: () => { focus: (pos?: string) => { run: () => void } }
+    getHTML: () => string
+  }
+} | null>('pageEditor')
+
+// Once TipTap mounts with seed HTML, detach modelValue so Nuxt UI's watcher
+// cannot setContent and collapse empty paragraphs created by Enter.
+watch(
+  () => pageEditor.value?.editor,
+  (editor) => {
+    if (!editor || !editing.value || editorModel.value == null) return
+    editorModel.value = null
+    nextTick(() => {
+      editor.chain().focus('end').run()
+    })
+  }
+)
 
 async function saveEdit() {
   if (!draftTitle.value.trim()) {
     toast.add({ title: 'Title is required', color: 'error' })
     return
   }
+
+  if (props.showAffiliateDisclosure) {
+    if (!draftAffiliateTitle.value.trim()) {
+      toast.add({ title: 'Disclosure title is required', color: 'error' })
+      return
+    }
+    if (!draftAffiliateDescription.value.trim()) {
+      toast.add({ title: 'Disclosure text is required', color: 'error' })
+      return
+    }
+  }
+
+  // Prefer live editor HTML in case the last keystroke hasn't flushed yet.
+  const content = pageEditor.value?.editor?.getHTML() ?? draftContent.value
 
   saving.value = true
   try {
@@ -108,11 +158,26 @@ async function saveEdit() {
       credentials: 'include',
       body: {
         title: draftTitle.value.trim(),
-        content: draftContent.value
+        content
       }
     })
+
+    if (props.showAffiliateDisclosure) {
+      await $fetch('/api/admin/site-settings', {
+        method: 'PUT',
+        credentials: 'include',
+        body: {
+          affiliateDisclosureEnabled: draftAffiliateEnabled.value,
+          affiliateDisclosureTitle: draftAffiliateTitle.value.trim(),
+          affiliateDisclosureDescription: draftAffiliateDescription.value.trim()
+        }
+      })
+      await refreshSettings()
+    }
+
     toast.add({ title: 'Page saved', color: 'success' })
     editing.value = false
+    editorModel.value = null
     await refresh()
   } catch (e: unknown) {
     const message = e && typeof e === 'object' && 'data' in e
@@ -123,6 +188,12 @@ async function saveEdit() {
     saving.value = false
   }
 }
+
+watch(isAdminView, (adminView) => {
+  if (!adminView) {
+    editing.value = false
+  }
+})
 </script>
 
 <template>
@@ -144,7 +215,7 @@ async function saveEdit() {
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <h1
             v-if="!editing"
-            class="text-3xl sm:text-4xl font-bold text-highlighted tracking-tight"
+            class="text-3xl sm:text-4xl font-bold text-navy-600 dark:text-highlighted tracking-tight"
           >
             {{ page.title }}
           </h1>
@@ -157,6 +228,7 @@ async function saveEdit() {
               v-model="draftTitle"
               size="xl"
               class="w-full"
+              @keydown.enter.prevent
             />
           </UFormField>
 
@@ -174,6 +246,7 @@ async function saveEdit() {
             </template>
             <template v-else>
               <UButton
+                type="button"
                 color="neutral"
                 variant="soft"
                 label="Cancel"
@@ -181,6 +254,7 @@ async function saveEdit() {
                 @click="cancelEdit"
               />
               <UButton
+                type="button"
                 color="primary"
                 label="Save"
                 :loading="saving"
@@ -190,22 +264,78 @@ async function saveEdit() {
           </div>
         </div>
 
-        <UAlert
-          v-if="showAffiliateDisclosure"
-          color="secondary"
-          variant="subtle"
-          icon="i-lucide-badge-info"
-          title="Affiliate disclosure"
-          description="As an Amazon Associate I earn from qualifying purchases."
+        <div
+          v-if="showAffiliateAlert"
           class="mb-8"
-          :ui="{
-            root: 'text-secondary!'
-          }"
-        />
+        >
+          <UAlert
+            color="secondary"
+            variant="subtle"
+            icon="i-lucide-badge-info"
+            :description="editing ? undefined : affiliateDescription"
+            :ui="{
+              root: 'text-secondary!'
+            }"
+          >
+            <template
+              v-if="!editing"
+              #title
+            >
+              <span class="inline-flex items-center gap-2 flex-wrap">
+                <span>{{ affiliateTitle }}</span>
+                <UBadge
+                  v-if="isAdminView && !affiliateEnabled"
+                  color="tertiary"
+                  variant="subtle"
+                  size="sm"
+                >
+                  hidden
+                </UBadge>
+              </span>
+            </template>
+
+            <template
+              v-if="editing"
+              #description
+            >
+              <div class="space-y-3 w-full mt-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <UFormField
+                    label="Show disclosure"
+                    class="flex-1"
+                  >
+                    <USwitch v-model="draftAffiliateEnabled" />
+                  </UFormField>
+                  <UBadge
+                    v-if="!draftAffiliateEnabled"
+                    color="tertiary"
+                    variant="subtle"
+                    size="sm"
+                  >
+                    hidden
+                  </UBadge>
+                </div>
+                <UFormField label="Title">
+                  <UInput
+                    v-model="draftAffiliateTitle"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UFormField label="Text">
+                  <UTextarea
+                    v-model="draftAffiliateDescription"
+                    :rows="3"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
+            </template>
+          </UAlert>
+        </div>
 
         <div
           v-if="!editing"
-          class="prose max-w-none text-default prose-headings:text-highlighted prose-a:text-primary prose-strong:text-highlighted"
+          class="prose max-w-none text-default prose-headings:text-highlighted prose-strong:text-highlighted"
           v-html="html"
         />
 
@@ -214,19 +344,26 @@ async function saveEdit() {
           class="rounded-lg border border-default overflow-hidden bg-default"
         >
           <UEditor
+            :key="editSession"
+            ref="pageEditor"
             v-slot="{ editor }"
-            v-model="draftContent"
-            content-type="markdown"
+            :model-value="editorModel ?? undefined"
+            content-type="html"
+            :mention="false"
             :placeholder="{ placeholder: 'Write page content…', mode: 'firstLine' }"
-            :starter-kit="{ paragraph: false }"
-            :extensions="[ParagraphWithEmptyLines]"
-            class="min-h-64 w-full px-4 py-3"
+            :starter-kit="{ heading: false }"
+            :image="imageOptions"
+            :extensions="[ImageUpload, ...fontExtensions]"
+            :handlers="customHandlers"
+            class="min-h-80 w-full px-4 py-3"
+            @update:model-value="onEditorUpdate"
           >
             <UEditorToolbar
               :editor="editor"
               :items="toolbarItems"
               class="border-b border-muted px-2 py-1.5 bg-elevated sticky top-0 z-10 overflow-x-auto"
             />
+            <EditorImageBubble :editor="editor" />
           </UEditor>
         </div>
       </template>

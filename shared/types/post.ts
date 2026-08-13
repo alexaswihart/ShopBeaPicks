@@ -32,4 +32,6 @@ export interface PostInput {
   content?: string
   cover_image?: string | null
   status?: PostStatus
+  /** Display date for the post. When omitted, existing/created date is kept (never auto-bumped on save). */
+  published_at?: string | null
 }

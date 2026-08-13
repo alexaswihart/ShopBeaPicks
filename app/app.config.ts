@@ -22,6 +22,19 @@ export default defineAppConfig({
     icons: {
       light: 'i-lucide-moon',
       dark: 'i-lucide-sun'
+    },
+    // Replace Nuxt UI's loose *:my-5 / leading-7 so edit matches published spacing
+    editor: {
+      slots: {
+        base: (defaults: string) =>
+          defaults
+            .replaceAll('*:my-5', '*:my-0')
+            .replaceAll('[&_p]:leading-7', '[&_p]:leading-normal')
+            .replaceAll('sm:px-8', '')
+            .replaceAll('[&_li]:my-1.5', '[&_li]:my-0')
+            .replaceAll('[&_a]:text-primary', '[&_a]:text-secondary')
+            .replaceAll('[&_a]:hover:border-primary', '[&_a]:hover:border-secondary')
+      }
     }
   }
 })

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { EditorCustomHandlers, EditorToolbarItem } from '@nuxt/ui'
-import type { Editor } from '@tiptap/vue-3'
+import { CalendarDate } from '@internationalized/date'
 import type { Post, PostStatus } from '#shared/types/post'
 import type { CoverImageMeta } from '#shared/utils/coverImage'
 import { parseCoverImage, serializeCoverImage } from '#shared/utils/coverImage'
 import { slugify } from '~/utils/slugify'
+import { toEditorHtml } from '~/utils/contentHtml'
 import { ImageUpload } from '~/components/editor/EditorImageUploadExtension'
-import { ParagraphWithEmptyLines } from '~/components/editor/ParagraphWithEmptyLines'
+import { fontExtensions } from '~/components/editor/fontExtensions'
 
 definePageMeta({
   middleware: 'admin'
@@ -28,86 +28,46 @@ const cover = ref<CoverImageMeta | null>(null)
 const status = ref<PostStatus>('draft')
 const slugTouched = ref(false)
 const saving = ref(false)
+const createdAt = ref(new Date().toISOString())
+const postDate = shallowRef(toCalendarDate(createdAt.value))
+const dateInput = useTemplateRef('dateInput')
 
-const customHandlers = {
-  imageUpload: {
-    canExecute: (editor: Editor) => editor.can().insertContent({ type: 'imageUpload' }),
-    execute: (editor: Editor) => editor.chain().focus().insertContent({ type: 'imageUpload' }),
-    isActive: (editor: Editor) => editor.isActive('imageUpload'),
-    isDisabled: undefined
+function toCalendarDate(iso: string): CalendarDate {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) {
+    const now = new Date()
+    return new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
   }
-} satisfies EditorCustomHandlers
+  return new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
+}
 
-const toolbarItems = [
-  [{
-    kind: 'undo',
-    icon: 'i-lucide-undo',
-    tooltip: { text: 'Undo' }
-  }, {
-    kind: 'redo',
-    icon: 'i-lucide-redo',
-    tooltip: { text: 'Redo' }
-  }],
-  [{
-    kind: 'heading',
-    level: 1,
-    icon: 'i-lucide-heading-1',
-    tooltip: { text: 'Heading 1' }
-  }, {
-    kind: 'heading',
-    level: 2,
-    icon: 'i-lucide-heading-2',
-    tooltip: { text: 'Heading 2' }
-  }, {
-    kind: 'heading',
-    level: 3,
-    icon: 'i-lucide-heading-3',
-    tooltip: { text: 'Heading 3' }
-  }],
-  [{
-    kind: 'mark',
-    mark: 'bold',
-    icon: 'i-lucide-bold',
-    tooltip: { text: 'Bold' }
-  }, {
-    kind: 'mark',
-    mark: 'italic',
-    icon: 'i-lucide-italic',
-    tooltip: { text: 'Italic' }
-  }, {
-    kind: 'mark',
-    mark: 'strike',
-    icon: 'i-lucide-strikethrough',
-    tooltip: { text: 'Strikethrough' }
-  }, {
-    kind: 'mark',
-    mark: 'code',
-    icon: 'i-lucide-code',
-    tooltip: { text: 'Code' }
-  }],
-  [{
-    kind: 'bulletList',
-    icon: 'i-lucide-list',
-    tooltip: { text: 'Bullet list' }
-  }, {
-    kind: 'orderedList',
-    icon: 'i-lucide-list-ordered',
-    tooltip: { text: 'Ordered list' }
-  }, {
-    kind: 'blockquote',
-    icon: 'i-lucide-text-quote',
-    tooltip: { text: 'Quote' }
-  }],
-  [{
-    kind: 'link',
-    icon: 'i-lucide-link',
-    tooltip: { text: 'Link' }
-  }, {
-    kind: 'imageUpload',
-    icon: 'i-lucide-image',
-    tooltip: { text: 'Upload image' }
-  }]
-] satisfies EditorToolbarItem<typeof customHandlers>[][]
+function calendarDateToIso(date: CalendarDate | null | undefined, timeSourceIso: string): string {
+  const source = new Date(timeSourceIso)
+  const hours = Number.isNaN(source.getTime()) ? 12 : source.getHours()
+  const minutes = Number.isNaN(source.getTime()) ? 0 : source.getMinutes()
+  const seconds = Number.isNaN(source.getTime()) ? 0 : source.getSeconds()
+  const local = new Date(
+    date!.year,
+    date!.month - 1,
+    date!.day,
+    hours,
+    minutes,
+    seconds
+  )
+  return local.toISOString()
+}
+
+const { customHandlers, toolbarItems } = useEditorFontToolbar({ withImageUpload: true })
+
+const imageOptions = {
+  resize: {
+    enabled: true,
+    directions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const,
+    minWidth: 48,
+    minHeight: 48,
+    alwaysPreserveAspectRatio: true
+  }
+}
 
 watch(title, (value) => {
   if (!slugTouched.value && isNew.value) {
@@ -131,10 +91,13 @@ if (!isNew.value) {
   title.value = post.title
   slug.value = post.slug
   excerpt.value = post.excerpt
-  content.value = post.content
+  content.value = toEditorHtml(post.content)
   cover.value = parseCoverImage(post.cover_image)
   status.value = post.status
   slugTouched.value = true
+  createdAt.value = post.created_at
+  // Default to creation date; if a blog date was already set manually, show that
+  postDate.value = toCalendarDate(post.published_at || post.created_at)
 }
 
 async function uploadImage(file: File) {
@@ -176,6 +139,10 @@ async function save(nextStatus?: PostStatus) {
     toast.add({ title: 'Title is required', color: 'error' })
     return
   }
+  if (!postDate.value) {
+    toast.add({ title: 'Post date is required', color: 'error' })
+    return
+  }
 
   saving.value = true
   const payload = {
@@ -184,7 +151,8 @@ async function save(nextStatus?: PostStatus) {
     excerpt: excerpt.value.trim(),
     content: content.value,
     cover_image: serializeCoverImage(cover.value),
-    status: nextStatus || status.value
+    status: nextStatus || status.value,
+    published_at: calendarDateToIso(postDate.value, createdAt.value)
   }
 
   try {
@@ -207,6 +175,8 @@ async function save(nextStatus?: PostStatus) {
       })
       status.value = post.status
       slug.value = post.slug
+      createdAt.value = post.created_at
+      postDate.value = toCalendarDate(post.published_at || post.created_at)
       toast.add({
         title: payload.status === 'published' ? 'Post published' : 'Draft saved',
         color: 'success'
@@ -294,10 +264,12 @@ useSeoMeta({
             <UEditor
               v-slot="{ editor }"
               v-model="content"
-              content-type="markdown"
+              content-type="html"
+              :mention="false"
               :placeholder="{ placeholder: 'Write your post…', mode: 'firstLine' }"
-              :starter-kit="{ paragraph: false }"
-              :extensions="[ParagraphWithEmptyLines, ImageUpload]"
+              :starter-kit="{ heading: false }"
+              :image="imageOptions"
+              :extensions="[ImageUpload, ...fontExtensions]"
               :handlers="customHandlers"
               class="min-h-80 w-full px-4 py-3"
             >
@@ -313,6 +285,33 @@ useSeoMeta({
       </div>
 
       <aside class="space-y-4">
+        <UFormField label="Post date">
+          <UInputDate
+            ref="dateInput"
+            v-model="postDate"
+            class="w-full"
+          >
+            <template #trailing>
+              <UPopover :reference="dateInput?.inputsRef?.[3]?.$el">
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  icon="i-lucide-calendar"
+                  aria-label="Select post date"
+                  class="px-0"
+                />
+                <template #content>
+                  <UCalendar
+                    v-model="postDate"
+                    class="p-2"
+                  />
+                </template>
+              </UPopover>
+            </template>
+          </UInputDate>
+        </UFormField>
+
         <UFormField label="Slug">
           <UInput
             v-model="slug"

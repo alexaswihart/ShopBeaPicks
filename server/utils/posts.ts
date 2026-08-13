@@ -42,6 +42,18 @@ export function slugify(input: string): string {
     .slice(0, 80) || 'post'
 }
 
+/** Accept ISO or YYYY-MM-DD; return ISO string or null if empty/invalid. */
+function normalizePostDate(value: string | null | undefined): string | null {
+  if (value == null) return null
+  const trimmed = String(value).trim()
+  if (!trimmed) return null
+  const parsed = new Date(trimmed)
+  if (Number.isNaN(parsed.getTime())) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid post date' })
+  }
+  return parsed.toISOString()
+}
+
 async function uniqueSlug(event: H3Event, base: string, excludeId?: string): Promise<string> {
   const { DB } = useCloudflareEnv(event)
   let slug = base
@@ -64,7 +76,7 @@ export async function listPublishedPosts(event: H3Event): Promise<PostListItem[]
     SELECT id, slug, title, excerpt, cover_image, status, published_at, created_at, updated_at
     FROM posts
     WHERE status = 'published'
-    ORDER BY published_at DESC, created_at DESC
+    ORDER BY datetime(COALESCE(published_at, created_at)) DESC, datetime(created_at) DESC
   `).all<PostRow>()
 
   return (results || []).map(mapListItem)
@@ -75,7 +87,7 @@ export async function listAllPosts(event: H3Event): Promise<PostListItem[]> {
   const { results } = await DB.prepare(`
     SELECT id, slug, title, excerpt, cover_image, status, published_at, created_at, updated_at
     FROM posts
-    ORDER BY updated_at DESC
+    ORDER BY datetime(COALESCE(published_at, created_at)) DESC, datetime(created_at) DESC
   `).all<PostRow>()
 
   return (results || []).map(mapListItem)
@@ -120,7 +132,8 @@ export async function createPost(event: H3Event, input: PostInput): Promise<Post
   const excerpt = input.excerpt?.trim() || ''
   const content = input.content || ''
   const coverImage = input.cover_image ?? null
-  const publishedAt = status === 'published' ? now : null
+  // Prefer explicit date from admin; otherwise use creation time (do not special-case publish).
+  const publishedAt = normalizePostDate(input.published_at) || now
 
   await DB.prepare(`
     INSERT INTO posts (id, slug, title, excerpt, content, cover_image, status, published_at, created_at, updated_at)
@@ -152,12 +165,10 @@ export async function updatePost(event: H3Event, id: string, input: PostInput): 
   const content = input.content !== undefined ? input.content : existing.content
   const coverImage = input.cover_image !== undefined ? input.cover_image : existing.cover_image
 
-  let publishedAt = existing.published_at
-  if (status === 'published' && !publishedAt) {
-    publishedAt = now
-  }
-  if (status === 'draft') {
-    publishedAt = existing.published_at
+  // Never auto-bump the blog date on save. Only change when the admin sends published_at.
+  let publishedAt = existing.published_at || existing.created_at
+  if (input.published_at !== undefined) {
+    publishedAt = normalizePostDate(input.published_at) || existing.created_at
   }
 
   await DB.prepare(`
